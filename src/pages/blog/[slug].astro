@@ -23,13 +23,18 @@ import { resolveBlogSiteIdentity } from "../../utils/site-identity";
 const slug = decodeSlug(Astro.params.slug);
 
 if (!slug) {
-	return Astro.redirect("/404");
+	return Astro.rewrite("/404");
 }
+
+// Use the configured `site` (https://happenow.app) for absolute URLs in
+// canonical / OG / image metadata. Falling back to the request origin would
+// leak the underlying Cloudflare Worker hostname to search engines.
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
 
 const { entry: post, cacheHint } = await getEmDashEntry("posts", slug);
 
 if (!post) {
-	return Astro.redirect("/404");
+	return Astro.rewrite("/404");
 }
 
 Astro.cache.set(cacheHint);
@@ -43,7 +48,7 @@ function getImageUrl(img: unknown): string | undefined {
 	if (typeof image.src === "string" && image.src) {
 		return image.src.startsWith("http")
 			? image.src
-			: `${Astro.url.origin}${image.src}`;
+			: `${siteOrigin}${image.src}`;
 	}
 	// Build from storageKey for local images
 	const meta = image.meta as Record<string, unknown> | undefined;
@@ -51,7 +56,7 @@ function getImageUrl(img: unknown): string | undefined {
 		(typeof meta?.storageKey === "string" ? meta.storageKey : undefined) ||
 		(typeof image.id === "string" ? image.id : undefined);
 	if (storageKey) {
-		return `${Astro.url.origin}/_emdash/api/media/file/${storageKey}`;
+		return `${siteOrigin}/_emdash/api/media/file/${storageKey}`;
 	}
 	return undefined;
 }
@@ -61,8 +66,8 @@ const { siteTitle } = resolveBlogSiteIdentity(await getSiteSettings());
 // Generate SEO meta from content
 const seo = getSeoMeta(post, {
 	siteTitle,
-	siteUrl: Astro.url.origin,
-	path: `/posts/${slug}`,
+	siteUrl: siteOrigin,
+	path: `/blog/${slug}`,
 	defaultOgImage: featuredImageUrl,
 });
 
@@ -182,7 +187,7 @@ const publishDate =
 								<span class="meta-label">Tags</span>
 								<div class="meta-tags">
 									{tags.map((t) => (
-										<a href={`/tag/${t.slug}`} class="meta-tag">
+										<a href={`/blog/tag/${t.slug}`} class="meta-tag">
 											{t.label}
 										</a>
 									))}
@@ -269,7 +274,7 @@ const publishDate =
 									title={p.data.title}
 									excerpt={p.data.excerpt}
 									featuredImage={p.data.featured_image}
-									href={`/posts/${p.id}`}
+									href={`/blog/${p.id}`}
 									date={p.data.publishedAt ?? undefined}
 									readingTime={getReadingTime(p.data.content)}
 									tags={postTags.map((t) => ({ slug: t.slug, label: t.label }))}

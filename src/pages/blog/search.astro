@@ -22,7 +22,7 @@ const { items: results } = query
 	<section class="search-page">
 		<h1 class="search-title">Search</h1>
 
-		<form method="get" action="/search" class="search-form">
+		<form method="get" action="/blog/search" class="search-form">
 			<input
 				type="search"
 				name="q"
@@ -50,7 +50,7 @@ const { items: results } = query
 					{results.map((result) => (
 						<li class="search-result">
 							<a
-								href={`/posts/${result.slug ?? result.id}`}
+								href={`/blog/${result.slug ?? result.id}`}
 								class="result-link"
 							>
 								<h2 class="result-title">

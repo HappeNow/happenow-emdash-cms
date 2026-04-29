@@ -4,7 +4,9 @@ import { getEmDashCollection, getSiteSettings } from "emdash";
 import { resolveBlogSiteIdentity } from "../utils/site-identity";
 
 export const GET: APIRoute = async ({ site, url }) => {
-	const siteUrl = site?.toString() || url.origin;
+	// Astro's URL.toString() leaves a trailing slash; strip it so the RSS
+	// links don't end up like "https://happenow.app//blog/...".
+	const siteUrl = (site?.origin) || url.origin;
 	const { siteTitle, siteTagline } = resolveBlogSiteIdentity(await getSiteSettings());
 
 	const { entries: posts } = await getEmDashCollection("posts", {
@@ -17,7 +19,7 @@ export const GET: APIRoute = async ({ site, url }) => {
 			if (!post.data.publishedAt) return null;
 			const pubDate = post.data.publishedAt.toUTCString();
 
-			const postUrl = `${siteUrl}/posts/${post.id}`;
+			const postUrl = `${siteUrl}/blog/${post.id}`;
 			const title = escapeXml(post.data.title || "Untitled");
 			const description = escapeXml(post.data.excerpt || "");
 
@@ -38,7 +40,7 @@ export const GET: APIRoute = async ({ site, url }) => {
     <title>${escapeXml(siteTitle)}</title>
     <description>${escapeXml(siteTagline)}</description>
     <link>${siteUrl}</link>
-    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${siteUrl}/blog/rss.xml" rel="self" type="application/rss+xml"/>
     <language>en-us</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
 ${items}

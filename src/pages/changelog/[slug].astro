@@ -1,0 +1,277 @@
+---
+import {
+	getEmDashEntry,
+	getEmDashCollection,
+	getSeoMeta,
+	decodeSlug,
+	getSiteSettings,
+} from "emdash";
+import { PortableText } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import { resolveBlogSiteIdentity } from "../../utils/site-identity";
+
+const slug = decodeSlug(Astro.params.slug);
+
+if (!slug) {
+	return Astro.rewrite("/404");
+}
+
+const { entry, cacheHint } = await getEmDashEntry("changelog", slug);
+
+if (!entry) {
+	return Astro.rewrite("/404");
+}
+
+Astro.cache.set(cacheHint);
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+const { siteTitle } = resolveBlogSiteIdentity(await getSiteSettings());
+
+const seo = getSeoMeta(entry, {
+	siteTitle,
+	siteUrl: siteOrigin,
+	path: `/changelog/${slug}`,
+});
+
+const publishDate =
+	entry.data.publishedAt?.toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	}) ?? null;
+
+// Show the 5 most recent releases as side navigation
+const { entries: recentEntries } = await getEmDashCollection("changelog", {
+	orderBy: { published_at: "desc" },
+	limit: 6,
+});
+const otherEntries = recentEntries.filter((e) => e.id !== entry.id).slice(0, 5);
+---
+
+<Base
+	title={seo.title}
+	pageTitle={seo.ogTitle}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	type="article"
+	publishedTime={entry.data.publishedAt?.toISOString() ?? null}
+	modifiedTime={entry.data.updatedAt.toISOString()}
+	content={{ collection: "changelog", id: entry.data.id, slug }}
+>
+	<article class="changelog-detail">
+		<nav class="back-link" aria-label="Back to changelog">
+			<a href="/changelog">← All releases</a>
+		</nav>
+
+		<header class="entry-header">
+			<div class="entry-meta">
+				{entry.data.version && (
+					<span class="entry-version">v{entry.data.version}</span>
+				)}
+				{publishDate && <time class="entry-date">{publishDate}</time>}
+			</div>
+			<h1 class="entry-title" {...entry.edit.title}>{entry.data.title}</h1>
+			{entry.data.summary && (
+				<p class="entry-summary" {...entry.edit.summary}>
+					{entry.data.summary}
+				</p>
+			)}
+		</header>
+
+		<div class="entry-content">
+			<PortableText value={entry.data.content} />
+		</div>
+
+		{otherEntries.length > 0 && (
+			<aside class="other-releases">
+				<h2 class="other-title">Other releases</h2>
+				<ul class="other-list">
+					{otherEntries.map((e) => (
+						<li>
+							<a href={`/changelog/${e.id}`} class="other-link">
+								{e.data.version && (
+									<span class="other-version">v{e.data.version}</span>
+								)}
+								<span class="other-name">{e.data.title}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</aside>
+		)}
+	</article>
+</Base>
+
+<style>
+	.changelog-detail {
+		max-width: var(--content-width);
+		margin: 0 auto;
+		padding: var(--spacing-8) var(--spacing-6) var(--spacing-16);
+	}
+
+	.back-link {
+		margin-bottom: var(--spacing-6);
+		font-size: var(--font-size-sm);
+	}
+
+	.back-link a {
+		color: var(--color-muted);
+		text-decoration: none;
+		transition: color var(--transition-fast);
+	}
+
+	.back-link a:hover {
+		color: var(--color-text);
+	}
+
+	.entry-header {
+		margin-bottom: var(--spacing-10);
+		padding-bottom: var(--spacing-8);
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.entry-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-3);
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+		margin-bottom: var(--spacing-3);
+	}
+
+	.entry-version {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+		color: var(--color-text);
+		background: var(--color-surface);
+		padding: var(--tag-padding-y) var(--spacing-2);
+		border-radius: var(--radius);
+	}
+
+	.entry-title {
+		font-size: clamp(2rem, 4vw, var(--font-size-4xl));
+		font-weight: 700;
+		line-height: var(--leading-tight);
+		letter-spacing: var(--tracking-tight);
+		margin-bottom: var(--spacing-3);
+	}
+
+	.entry-summary {
+		font-size: var(--font-size-xl);
+		line-height: var(--leading-relaxed);
+		color: var(--color-text-secondary);
+	}
+
+	.entry-content {
+		font-size: var(--font-size-lg);
+		line-height: var(--leading-relaxed);
+	}
+
+	.entry-content :global(p) {
+		margin-bottom: 1.5em;
+	}
+
+	.entry-content :global(h2) {
+		font-size: var(--font-size-2xl);
+		margin-top: 2em;
+		margin-bottom: 0.75em;
+	}
+
+	.entry-content :global(h3) {
+		font-size: var(--font-size-xl);
+		margin-top: 1.75em;
+		margin-bottom: 0.5em;
+	}
+
+	.entry-content :global(ul),
+	.entry-content :global(ol) {
+		margin-bottom: 1.5em;
+		padding-left: 1.5em;
+	}
+
+	.entry-content :global(li) {
+		margin-bottom: 0.5em;
+	}
+
+	.entry-content :global(code) {
+		font-family: var(--font-mono);
+		font-size: 0.9em;
+		background: var(--color-surface);
+		padding: 0.2em 0.4em;
+		border-radius: var(--radius);
+	}
+
+	.entry-content :global(pre) {
+		margin: 1.5em 0;
+		padding: var(--spacing-5);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		overflow-x: auto;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+	}
+
+	.entry-content :global(pre code) {
+		background: none;
+		padding: 0;
+	}
+
+	.other-releases {
+		margin-top: var(--spacing-16);
+		padding-top: var(--spacing-8);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.other-title {
+		font-size: var(--font-size-xs);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-wide);
+		color: var(--color-muted);
+		margin-bottom: var(--spacing-4);
+	}
+
+	.other-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.other-list li {
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.other-list li:last-child {
+		border-bottom: none;
+	}
+
+	.other-link {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-3);
+		padding: var(--spacing-3) 0;
+		text-decoration: none;
+		color: var(--color-text-secondary);
+		transition: color var(--transition-fast);
+	}
+
+	.other-link:hover {
+		color: var(--color-text);
+	}
+
+	.other-version {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+		min-width: 4rem;
+	}
+
+	.other-name {
+		font-size: var(--font-size-sm);
+	}
+</style>

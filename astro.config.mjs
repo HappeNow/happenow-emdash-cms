@@ -7,6 +7,7 @@ import { defineConfig, fontProviders } from "astro/config";
 import emdash from "emdash/astro";
 
 export default defineConfig({
+	site: "https://happenow.app",
 	output: "server",
 	adapter: cloudflare(),
 	image: {

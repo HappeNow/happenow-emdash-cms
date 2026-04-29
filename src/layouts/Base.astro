@@ -47,9 +47,6 @@ const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}
 // Fetch primary menu defined in seed
 const menu = await getMenu("primary");
 
-// Fetch pages for footer
-const { entries: pages } = await getEmDashCollection("pages");
-
 // Build public page context for plugin contributions
 // SEO data is passed here and rendered securely by EmDashHead
 const pageCtx = createPublicPageContext({
@@ -99,7 +96,7 @@ const isLoggedIn = !!Astro.locals.user;
 		<EmDashBodyStart page={pageCtx} />
 		<header class="site-header">
 			<nav class="nav">
-				<a href="/" class="site-title">
+				<a href="/blog" class="site-title">
 					{siteLogo
 						? <img src={siteLogo.url} alt={siteLogo.alt || siteTitle} class="site-logo-img" />
 						: siteTitle
@@ -112,7 +109,7 @@ const isLoggedIn = !!Astro.locals.user;
 						inputClass="site-search-input"
 						resultsClass="site-search-results"
 						resultClass="site-search-result"
-						collections={["posts", "pages"]}
+						collections={["posts", "changelog"]}
 					/>
 					<div class="nav-links">
 						{
@@ -142,7 +139,7 @@ const isLoggedIn = !!Astro.locals.user;
 			<div class="footer-inner">
 				<div class="footer-grid">
 					<div class="footer-brand">
-						<a href="/" class="footer-logo">
+						<a href="/blog" class="footer-logo">
 							{siteLogo
 								? <img src={siteLogo.url} alt={siteLogo.alt || siteTitle} class="footer-logo-img" />
 								: siteTitle
@@ -153,17 +150,8 @@ const isLoggedIn = !!Astro.locals.user;
 					<div class="footer-nav">
 						<h4 class="footer-heading">Navigate</h4>
 						<ul class="footer-links">
-							<li><a href="/">Home</a></li>
-							<li><a href="/posts">All Posts</a></li>
-							{
-								pages.slice(0, 3).map((page) => (
-									<li>
-										<a href={`/pages/${page.data.slug || page.id}`}>
-											{page.data.title}
-										</a>
-									</li>
-								))
-							}
+							<li><a href="/blog">Blog</a></li>
+							<li><a href="/changelog">Changelog</a></li>
 						</ul>
 					</div>
 					<div class="footer-nav">
@@ -186,7 +174,7 @@ const isLoggedIn = !!Astro.locals.user;
 									</li>
 								))
 							}
-							<li><a href="/rss.xml">RSS Feed</a></li>
+							<li><a href="/blog/rss.xml">RSS Feed</a></li>
 						</ul>
 					</div>
 					<div class="footer-widgets-section">
