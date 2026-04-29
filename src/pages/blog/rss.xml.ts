@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { getEmDashCollection, getSiteSettings } from "emdash";
 
-import { resolveBlogSiteIdentity } from "../utils/site-identity";
+import { resolveBlogSiteIdentity } from "../../utils/site-identity";
 
 export const GET: APIRoute = async ({ site, url }) => {
 	// Astro's URL.toString() leaves a trailing slash; strip it so the RSS
