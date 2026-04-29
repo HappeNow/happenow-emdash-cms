@@ -44,40 +44,6 @@
 					"type": "text"
 				}
 			]
-		},
-		{
-			"slug": "changelog",
-			"label": "Changelog",
-			"labelSingular": "Changelog Entry",
-			"supports": ["drafts", "revisions", "search", "seo"],
-			"fields": [
-				{
-					"slug": "title",
-					"label": "Title",
-					"type": "string",
-					"required": true,
-					"searchable": true
-				},
-				{
-					"slug": "version",
-					"label": "Version",
-					"type": "string",
-					"required": true,
-					"searchable": true
-				},
-				{
-					"slug": "summary",
-					"label": "Summary",
-					"type": "text",
-					"searchable": true
-				},
-				{
-					"slug": "content",
-					"label": "Content",
-					"type": "portableText",
-					"searchable": true
-				}
-			]
 		}
 	],
 
@@ -91,7 +57,8 @@
 			"terms": [
 				{ "slug": "development", "label": "Development" },
 				{ "slug": "design", "label": "Design" },
-				{ "slug": "notes", "label": "Notes" }
+				{ "slug": "notes", "label": "Notes" },
+				{ "slug": "changelog", "label": "Changelog" }
 			]
 		},
 		{
@@ -129,7 +96,7 @@
 			"label": "Primary Navigation",
 			"items": [
 				{ "type": "custom", "label": "Blog", "url": "/blog" },
-				{ "type": "custom", "label": "Changelog", "url": "/changelog" }
+				{ "type": "custom", "label": "Changelog", "url": "/blog/category/changelog" }
 			]
 		}
 	],
